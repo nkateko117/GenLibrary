@@ -18,7 +18,7 @@ namespace GenLibrary.Identity.Stores
         public CustomUserStore(IDal dal, IConfiguration config)
         {
             _dal = dal;
-            _conn = config.GetConnectionString("LibraryDb");
+            _conn = config.GetConnectionString("DefaultConnection");
         }
 
         public void Dispose() { /* no-op */ }
@@ -204,9 +204,7 @@ namespace GenLibrary.Identity.Stores
         {
             cancellationToken.ThrowIfCancellationRequested();
             var users = new List<AppUser>();
-            // simple join to find users in role
             using var r = (SqlDataReader)await _dal.ExecuteReaderAsync(_conn, "SELECT u.* FROM AppUsers u JOIN AppUserRoles ur ON u.Id = ur.UserId JOIN AppRoles r ON r.Id = ur.RoleId WHERE r.NormalizedName = @NormalizedName", new SqlParameter("@NormalizedName", roleName.ToUpperInvariant()));
-            // Note: The above is raw SQL using ExecuteReaderAsync; you can create a proc if you prefer.
             while (await r.ReadAsync(cancellationToken))
             {
                 users.Add(MapUser(r));

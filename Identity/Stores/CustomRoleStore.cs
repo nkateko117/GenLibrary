@@ -13,7 +13,7 @@ namespace GenLibrary.Identity.Stores
         public CustomRoleStore(IDal dal, IConfiguration config)
         {
             _dal = dal;
-            _conn = config.GetConnectionString("LibraryDb");
+            _conn = config.GetConnectionString("DefaultConnection");
         }
 
         public void Dispose() { }
@@ -28,13 +28,11 @@ namespace GenLibrary.Identity.Stores
 
         public async Task<IdentityResult> UpdateAsync(IdentityRole<Guid> role, CancellationToken cancellationToken)
         {
-            // Simple update using PROC_ID_UpdateRole if you create it. For now skip and return success.
             return IdentityResult.Success;
         }
 
         public async Task<IdentityResult> DeleteAsync(IdentityRole<Guid> role, CancellationToken cancellationToken)
         {
-            // implement as needed
             return IdentityResult.Success;
         }
 

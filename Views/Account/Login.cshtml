@@ -1,0 +1,188 @@
+﻿@model GenLibrary.Models.ViewModels.LoginVM
+@{
+    ViewData["Title"] = "Login";
+}
+
+<div class="container-fluid vh-100 d-flex align-items-center justify-content-center bg-light">
+    <div class="row w-100 justify-content-center">
+        <div class="col-11 col-sm-9 col-md-7 col-lg-5 col-xl-4">
+            <div class="card border-0 shadow-lg rounded-4">
+                <div class="card-body p-4 p-md-5">
+                    <!-- Logo/Brand Section -->
+                    <div class="text-center mb-4">
+                        <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 64px; height: 64px;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-person-lock text-primary" viewBox="0 0 16 16">
+                                <path d="M11 5a3 3 0 1 1-6 0 3 3 0 0 1 6 0M8 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4m0 5.996V14H3s-1 0-1-1 1-4 6-4q.845.002 1.544.107a4.5 4.5 0 0 0-.803.918A11 11 0 0 0 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664zM9 13a1 1 0 0 1 1-1v-1a2 2 0 1 1 4 0v1a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1zm3-3a1 1 0 0 0-1 1v1h2v-1a1 1 0 0 0-1-1" />
+                            </svg>
+                        </div>
+                        <h2 class="fw-bold mt-3 mb-1">Welcome Back</h2>
+                        <p class="text-muted">Please enter your credentials to continue</p>
+                    </div>
+
+                    <!-- Alert Messages -->
+                    @if (TempData["ErrorMessage"] != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show rounded-3" role="alert">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>@TempData["ErrorMessage"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    }
+
+                    @if (TempData["SuccessMessage"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show rounded-3" role="alert">
+                            <i class="bi bi-check-circle-fill me-2"></i>@TempData["SuccessMessage"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    }
+
+                    <form method="post" asp-controller="Account" asp-action="Login" asp-route-returnUrl="@ViewData["ReturnUrl"]" novalidate>
+                        @Html.AntiForgeryToken()
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger rounded-3" role="alert"></div>
+
+                        <!-- Email Input -->
+                        <div class="mb-3">
+                            <label asp-for="Email" class="form-label fw-semibold">
+                                <i class="bi bi-envelope me-1"></i>Email Address
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0">
+                                    <i class="bi bi-at text-muted"></i>
+                                </span>
+                                <input asp-for="Email"
+                                       class="form-control border-start-0 ps-0"
+                                       placeholder="your.email@example.com"
+                                       autocomplete="username"
+                                       autofocus />
+                            </div>
+                            <span asp-validation-for="Email" class="text-danger small"></span>
+                        </div>
+
+                        <!-- Password Input -->
+                        <div class="mb-3">
+                            <label asp-for="Password" class="form-label fw-semibold">
+                                <i class="bi bi-lock me-1"></i>Password
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0">
+                                    <i class="bi bi-key text-muted"></i>
+                                </span>
+                                <input asp-for="Password"
+                                       class="form-control border-start-0 border-end-0 ps-0"
+                                       placeholder="Enter your password"
+                                       autocomplete="current-password"
+                                       id="passwordInput" />
+                                <button class="btn btn-outline-secondary border-start-0"
+                                        type="button"
+                                        id="togglePassword"
+                                        aria-label="Toggle password visibility">
+                                    <i class="bi bi-eye" id="toggleIcon"></i>
+                                </button>
+                            </div>
+                            <span asp-validation-for="Password" class="text-danger small"></span>
+                        </div>
+
+                        <!-- Remember Me & Forgot Password -->
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <div class="form-check">
+                                <input asp-for="RememberMe" class="form-check-input" />
+                                <label asp-for="RememberMe" class="form-check-label small"></label>
+                            </div>
+                            <a asp-controller="Account" asp-action="ForgotPassword" class="text-decoration-none small">Forgot Password?</a>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold rounded-3 mb-3">
+                            <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
+                        </button>
+
+                        <!-- Divider -->
+                        <div class="position-relative my-4">
+                            <hr class="text-muted">
+                            <span class="position-absolute top-50 start-50 translate-middle bg-white px-3 text-muted small">or</span>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Register Link -->
+            <div class="text-center mt-4">
+                <p class="text-muted mb-0">
+                    Don't have an account?
+                    <a asp-controller="Account" asp-action="Register" class="text-decoration-none fw-semibold">Create one now</a>
+                </p>
+            </div>
+
+            <!-- Footer Links -->
+            <div class="text-center mt-3">
+                <small class="text-muted">
+                    <a href="#" class="text-muted text-decoration-none me-3">Privacy Policy</a>
+                    <a href="#" class="text-muted text-decoration-none">Terms of Service</a>
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        // Password visibility toggle
+        document.getElementById('togglePassword')?.addEventListener('click', function() {
+            const passwordInput = document.getElementById('passwordInput');
+            const toggleIcon = document.getElementById('toggleIcon');
+
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.classList.remove('bi-eye');
+                toggleIcon.classList.add('bi-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.classList.remove('bi-eye-slash');
+                toggleIcon.classList.add('bi-eye');
+            }
+        });
+
+        // Auto-dismiss alerts after 5 seconds
+        setTimeout(function() {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                const bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            });
+        }, 5000);
+
+        // Enhanced form validation feedback
+        const form = document.querySelector('form');
+        form?.addEventListener('submit', function() {
+            const submitBtn = form.querySelector('button[type="submit"]');
+            if (form.checkValidity()) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Signing in...';
+            }
+        });
+    </script>
+}
+
+<style>
+    /* Additional custom styles */
+    .form-control:focus,
+    .form-check-input:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+    }
+
+    .input-group-text {
+        background-color: transparent;
+    }
+
+    .card {
+        transition: transform 0.2s ease-in-out;
+    }
+
+    /* Smooth focus transitions */
+    input, button, a {
+        transition: all 0.2s ease-in-out;
+    }
+</style>
