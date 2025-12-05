@@ -1,0 +1,21 @@
+﻿@model GenLibrary.ViewModels.BooksViewModel
+
+@{
+    ViewData["Title"] = "Books";
+}
+
+<div class="container mt-4">
+
+    <h2 class="mb-4">Books</h2>
+
+    <div id="bookFilterContainer">
+        @await Html.PartialAsync("_BookFilter")
+    </div>
+
+    <div id="bookTableContainer">
+        @await Html.PartialAsync("_BookTable", Model.Books)
+    </div>
+
+</div>
+
+<script src="~/js/books.js"></script>

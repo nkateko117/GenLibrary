@@ -1,0 +1,45 @@
+﻿@model List<GenLibrary.Dtos.DetailedBookDto>
+
+@* Views/Shared/_BookTable.cshtml *@
+
+<table id="booksTable" class="table table-striped table-bordered" style="width:100%">
+    <thead>
+        <tr>
+            <th>Book Id</th>
+            <th>Title</th>
+            <th>ISBN</th>
+            <th>Authors</th>
+            <th>Total Copies</th>
+            <th>Available Copies</th>
+            <th>Published</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var book in Model)
+        {
+            <tr>
+                <td>@book.BookId</td>
+                <td>@book.Title</td>
+                <td>@book.ISBN</td>
+                <td>@book.Authors</td>
+                <td>@book.TotalCopies</td>
+                <td class="@(book.AvailableCopies > 0 ? "text-success fw-bold" : "text-danger fw-bold")">
+                    @book.AvailableCopies
+                </td>
+                <td>@book.PublishedYear</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('#booksTable').DataTable({
+                pageLength: 10,
+                ordering: true,
+                responsive: true
+            });
+        });
+    </script>
+}

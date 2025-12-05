@@ -5,6 +5,7 @@ namespace GenLibrary.Services
 {
     public interface IBookServices
     {
-        Task<IEnumerable<AuthorDto>> GetMembersAsync();
+        //Task<IEnumerable<AuthorDto>> GetMembersAsync();
+        Task<List<DetailedBookDto>> GetDetailedBookListAsync();
     }
 }

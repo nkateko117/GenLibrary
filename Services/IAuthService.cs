@@ -8,5 +8,4 @@ namespace GenLibrary.Services
         Task LogoutAsync();
         //Task<RegisterResult> RegisterAsync(RegisterVM model);
     }
-
 }
