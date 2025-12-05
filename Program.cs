@@ -17,6 +17,7 @@ builder.Services.AddScoped<IUserStore<AppUser>, CustomUserStore>();
 builder.Services.AddScoped<IRoleStore<IdentityRole<Guid>>, CustomRoleStore>();
 
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IBookService, BookService>();
 
 // ASP.NET Core Identity Config
 builder.Services.AddIdentity<AppUser, IdentityRole<Guid>>(options =>
@@ -52,7 +53,7 @@ app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
+    pattern: "{controller=Books}/{action=Index}/{id?}");
 
 // Seeding Initial Roles + Admin User
 using (var scope = app.Services.CreateScope())

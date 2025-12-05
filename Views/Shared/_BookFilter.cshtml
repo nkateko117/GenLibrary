@@ -1,65 +1,39 @@
-﻿@* Views/Shared/_BookFilter.cshtml *@
+﻿@model GenLibrary.ViewModels.BooksViewModel?
+
+@* Views/Shared/_BookFilter.cshtml *@
 <div class="card mb-3">
     <div class="card-body">
-        <form id="bookFilterForm" class="row g-3">
+        <form id="bookFilterForm" method="get" asp-controller="Books" asp-action="Index" class="row g-3">
 
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <label class="form-label">Title</label>
-                <input type="text" class="form-control" id="filterTitle" placeholder="Search title...">
+                <input type="text" class="form-control" id="filterTitle" name="title" value="@Model?.Title" placeholder="Search title...">
             </div>
 
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <label class="form-label">ISBN</label>
-                <input type="text" class="form-control" id="filterISBN" placeholder="Search ISBN...">
+                <input type="text" class="form-control" id="filterISBN" name="isbn" value="@Model?.ISBN" placeholder="Search ISBN...">
             </div>
 
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <label class="form-label">Author</label>
-                <input type="text" class="form-control" id="filterAuthor" placeholder="Search author...">
+                <input type="text" class="form-control" id="filterAuthor" name="author" value="@Model?.Author" placeholder="Search author...">
             </div>
 
             <div class="col-md-2 d-flex align-items-end">
                 <div class="form-check">
-                    <input class="form-check-input" type="checkbox" id="filterAvailableOnly">
+                    <input class="form-check-input" type="checkbox" id="filterAvailableOnly" name="availableOnly" value="true" @(Model?.AvailableOnly == true ? "checked" : "")>
                     <label class="form-check-label">
                         Available Only
                     </label>
                 </div>
             </div>
 
+            <div class="col-md-3 d-flex align-items-end gap-2">
+                <button type="submit" class="btn btn-primary">Filter</button>
+                <a asp-controller="Books" asp-action="Index" class="btn btn-secondary">Clear</a>
+            </div>
+
         </form>
     </div>
 </div>
-
-<script>
-    // Trigger filter callback
-    document.querySelectorAll('#bookFilterForm input').forEach(input => {
-        input.addEventListener('input', function () {
-            applyBookFilters();
-        });
-    });
-
-    function applyBookFilters() {
-        const table = $('#booksTable').DataTable();
-
-        const title = document.getElementById('filterTitle').value.toLowerCase();
-        const isbn = document.getElementById('filterISBN').value.toLowerCase();
-        const author = document.getElementById('filterAuthor').value.toLowerCase();
-        const availableOnly = document.getElementById('filterAvailableOnly').checked;
-
-        table.rows().every(function () {
-            const data = this.data();
-
-            const matchesTitle = data[1].toLowerCase().includes(title);
-            const matchesISBN = data[2].toLowerCase().includes(isbn);
-            const matchesAuthor = data[3].toLowerCase().includes(author);
-            const matchesAvail = !availableOnly || parseInt(data[5]) > 0;
-
-            if (matchesTitle && matchesISBN && matchesAuthor && matchesAvail) {
-                this.node().style.display = '';
-            } else {
-                this.node().style.display = 'none';
-            }
-        });
-    }
-</script>

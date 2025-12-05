@@ -243,7 +243,7 @@ GROUP BY
     b.CreatedAt,
     b.Active;
 
-/* Get Detailed View */
+/* Get Detailed Books */
 CREATE OR ALTER PROCEDURE dbo.PROC_GetDetailedBooks
 AS
 BEGIN
@@ -252,4 +252,95 @@ BEGIN
     SELECT *
     FROM dbo.DetailedBooks
     ORDER BY Title;
+END
+
+/* Get Single Book */
+CREATE PROCEDURE [dbo].[PROC_GetDetailedBook_ById]
+    @BookId INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT *
+    FROM dbo.DetailedBooks
+    Where BookId = @BookId
+END
+
+/* Book Copy Detailed Rows */
+CREATE OR ALTER VIEW dbo.BookCopyDetailed
+AS
+SELECT 
+    bc.CopyId,
+    bc.BookId,
+    bc.Barcode,
+    bc.AcquisitionDate,
+    bc.[Condition],
+    bc.[Status],
+    b.Title,
+    c.CheckoutDate,
+    c.DueDate,
+    c.IsMarkedReturned,
+    u.Id AS UserId,
+    u.FullName AS MemberFullName,
+    
+    -- New column: StatusName
+    CASE 
+        WHEN bc.[Status] = 1 THEN 'Available'
+        WHEN bc.[Status] = 0 THEN 'Checked Out'
+        WHEN bc.[Status] = 3 THEN 'Out of Commission'
+        ELSE 'Unknown'
+    END AS StatusName,
+    
+    -- New column: DaysLeft (0 minimum)
+    CASE 
+        WHEN c.DueDate IS NULL THEN NULL
+        ELSE 
+            CASE 
+                WHEN DATEDIFF(DAY, GETDATE(), c.DueDate) < 0 THEN 0
+                ELSE DATEDIFF(DAY, GETDATE(), c.DueDate)
+            END
+    END AS DaysLeft
+
+FROM dbo.BookCopies bc
+INNER JOIN dbo.Books b 
+    ON b.BookId = bc.BookId
+OUTER APPLY (
+    SELECT TOP 1 c_inner.*, u_inner.Id, u_inner.FullName
+    FROM dbo.Checkouts c_inner
+    INNER JOIN dbo.AppUsers u_inner
+        ON c_inner.UserId = u_inner.Id
+    WHERE c_inner.CopyId = bc.CopyId
+      AND c_inner.ReturnDate IS NULL
+      AND c_inner.IsMarkedReturned = 0
+    ORDER BY c_inner.CheckoutDate DESC
+) c
+LEFT JOIN dbo.AppUsers u
+    ON c.UserId = u.Id;
+
+
+/* Get Detailed Book Copies */
+CREATE OR ALTER PROCEDURE dbo.PROC_GetBookCopies
+    @BookId INT = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT 
+        CopyId,
+        BookId,
+        Barcode,
+        AcquisitionDate,
+        [Condition],
+        [Status],
+        Title,
+        CheckoutDate,
+        DueDate,
+        IsMarkedReturned,
+        UserId,
+        MemberFullName,
+        StatusName,
+        DaysLeft
+    FROM dbo.BookCopyDetailed
+    WHERE (@BookId IS NULL OR BookId = @BookId)
+    ORDER BY CopyId ASC;
 END

@@ -1,11 +1,12 @@
 ﻿using GenLibrary.Dtos;
 using GenLibrary.Identity.Models;
+using GenLibrary.Models.Dtos;
 
 namespace GenLibrary.Services
 {
-    public interface IBookServices
+    public interface IBookService
     {
-        //Task<IEnumerable<AuthorDto>> GetMembersAsync();
         Task<List<DetailedBookDto>> GetDetailedBookListAsync();
+        Task<List<BookCopyDetailedDto>> GetDetailedBookCopyListAsync(int? bookId);
     }
 }

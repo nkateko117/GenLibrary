@@ -12,6 +12,7 @@
             <th>Total Copies</th>
             <th>Available Copies</th>
             <th>Published</th>
+            <th>Action</th>
         </tr>
     </thead>
     <tbody>
@@ -27,19 +28,10 @@
                     @book.AvailableCopies
                 </td>
                 <td>@book.PublishedYear</td>
+                <td>
+                    <a href="@Url.Action("Copies", "Books", new { bookId = book.BookId, title = book.Title })" class="btn btn-primary btn-sm">View Copies</a>
+                </td>
             </tr>
         }
     </tbody>
 </table>
-
-@section Scripts {
-    <script>
-        $(document).ready(function () {
-            $('#booksTable').DataTable({
-                pageLength: 10,
-                ordering: true,
-                responsive: true
-            });
-        });
-    </script>
-}
