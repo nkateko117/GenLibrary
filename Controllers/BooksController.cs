@@ -1,7 +1,9 @@
-﻿using GenLibrary.Services;
+﻿using GenLibrary.Models;
+using GenLibrary.Services;
 using GenLibrary.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Diagnostics;
 
 namespace GenLibrary.Controllers
 {
@@ -27,12 +29,12 @@ namespace GenLibrary.Controllers
 
             if (!string.IsNullOrWhiteSpace(isbn))
                 books = books
-                    .Where(b => b.ISBN.Contains(isbn, StringComparison.OrdinalIgnoreCase))
+                    .Where(b => b.ISBN != null && b.ISBN.Contains(isbn, StringComparison.OrdinalIgnoreCase))
                     .ToList();
 
             if (!string.IsNullOrWhiteSpace(author))
                 books = books
-                    .Where(b => b.Authors.Contains(author, StringComparison.OrdinalIgnoreCase))
+                    .Where(b => b.Authors != null && b.Authors.Contains(author, StringComparison.OrdinalIgnoreCase))
                     .ToList();
 
             if (availableOnly)
@@ -57,6 +59,13 @@ namespace GenLibrary.Controllers
             var copies = await _bookServices.GetDetailedBookCopyListAsync(bookId);
             ViewBag.BookTitle = title;
             return View(copies);
+        }
+
+        [AllowAnonymous]
+        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+        public IActionResult Error()
+        {
+            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
     }
 }

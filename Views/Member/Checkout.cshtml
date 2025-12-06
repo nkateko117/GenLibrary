@@ -1,5 +1,143 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model GenLibrary.ViewModels.MemberCheckoutVM
+
 @{
+    ViewData["Title"] = "Checkout Book";
 }
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-cart-plus"></i> Checkout Book</h2>
+        <a href="@Url.Action("Index", "Books")" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Back to Books
+        </a>
+    </div>
+
+    @if (TempData["Message"] != null)
+    {
+        var isSuccess = TempData["Success"] as bool? ?? false;
+        <div class="alert @(isSuccess ? "alert-success" : "alert-danger") alert-dismissible fade show" role="alert">
+            @TempData["Message"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="row">
+        <div class="col-md-8">
+            @if (Model.Book != null)
+            {
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <strong>Book Details</strong>
+                    </div>
+                    <div class="card-body">
+                        <h4>@Model.Book.Title</h4>
+                        <p class="text-muted">by @Model.Book.Authors</p>
+                        <p>@Model.Book.Summary</p>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <small class="text-muted">ISBN:</small><br />
+                                <strong>@Model.Book.ISBN</strong>
+                            </div>
+                            <div class="col-md-4">
+                                <small class="text-muted">Published:</small><br />
+                                <strong>@Model.Book.PublishedYear</strong>
+                            </div>
+                            <div class="col-md-4">
+                                <small class="text-muted">Pages:</small><br />
+                                <strong>@Model.Book.TotalPages</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                @if (!Model.CanCheckout)
+                {
+                    @if (Model.CurrentCheckoutCount >= 5)
+                    {
+                        <div class="alert alert-danger">
+                            <i class="bi bi-exclamation-triangle"></i>
+                            <strong>Checkout Limit Reached!</strong>
+                            You already have 5 books checked out. Please return a book before checking out another.
+                            <a href="@Url.Action("MyBooks", "Member")" class="alert-link">View My Books</a>
+                        </div>
+                    }
+                    else if (!Model.AvailableCopies.Any())
+                    {
+                        <div class="alert alert-warning">
+                            <i class="bi bi-info-circle"></i>
+                            <strong>No Copies Available</strong>
+                            All copies of this book are currently checked out. Please check back later.
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="card">
+                        <div class="card-header bg-success text-white">
+                            <strong>Select a Copy to Checkout</strong>
+                        </div>
+                        <div class="card-body">
+                            <form asp-action="Checkout" method="post">
+                                <div class="mb-3">
+                                    <label class="form-label">Available Copies</label>
+                                    <div class="list-group">
+                                        @foreach (var copy in Model.AvailableCopies)
+                                        {
+                                            <label class="list-group-item">
+                                                <input class="form-check-input me-2" type="radio" name="copyId" value="@copy.CopyId" required>
+                                                <strong>@copy.Barcode</strong> - Condition: @copy.Condition
+                                            </label>
+                                        }
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <small class="text-muted">
+                                        <i class="bi bi-info-circle"></i>
+                                        This book will be due in 21 days from checkout.
+                                    </small>
+                                </div>
+                                <button type="submit" class="btn btn-success btn-lg">
+                                    <i class="bi bi-check-circle"></i> Confirm Checkout
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle"></i> Book not found.
+                </div>
+            }
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <strong>Your Status</strong>
+                </div>
+                <div class="card-body text-center">
+                    <h3>@Model.CurrentCheckoutCount / 5</h3>
+                    <p class="text-muted">Books Currently Borrowed</p>
+                    <hr />
+                    <h3 class="@(Model.RemainingCheckouts > 0 ? "text-success" : "text-danger")">@Model.RemainingCheckouts</h3>
+                    <p class="text-muted">Remaining Checkouts</p>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header">
+                    <strong>Borrowing Rules</strong>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        <li><i class="bi bi-check text-success"></i> Maximum 5 books at a time</li>
+                        <li><i class="bi bi-check text-success"></i> 21-day loan period</li>
+                        <li><i class="bi bi-exclamation-triangle text-warning"></i> Return books on time</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

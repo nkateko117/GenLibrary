@@ -1,5 +1,102 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model List<GenLibrary.Dtos.OverdueCheckoutDto>
+
 @{
+    ViewData["Title"] = "Overdue Books";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-danger">
+            <i class="bi bi-exclamation-triangle"></i> Overdue Books
+        </h2>
+        <a href="@Url.Action("Dashboard", "Librarian")" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+
+    @if (TempData["Message"] != null)
+    {
+        var isSuccess = TempData["Success"] as bool? ?? false;
+        <div class="alert @(isSuccess ? "alert-success" : "alert-danger") alert-dismissible fade show" role="alert">
+            @TempData["Message"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-success">
+            <i class="bi bi-check-circle"></i> Great news! There are no overdue books at this time.
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-warning">
+            <i class="bi bi-info-circle"></i> There are <strong>@Model.Count</strong> overdue book(s) that need attention.
+        </div>
+
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <strong>Overdue Checkouts</strong>
+            </div>
+            <div class="card-body">
+                <table id="overdueTable" class="table table-striped table-bordered" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th>Book Title</th>
+                            <th>Barcode</th>
+                            <th>Member</th>
+                            <th>Email</th>
+                            <th>Checkout Date</th>
+                            <th>Due Date</th>
+                            <th>Days Overdue</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>@item.BookTitle</td>
+                                <td><code>@item.Barcode</code></td>
+                                <td><strong>@item.MemberName</strong></td>
+                                <td>
+                                    <a href="mailto:@item.MemberEmail">@item.MemberEmail</a>
+                                </td>
+                                <td>@item.CheckoutDate.ToString("MMM dd, yyyy")</td>
+                                <td>@item.DueDate.ToString("MMM dd, yyyy")</td>
+                                <td>
+                                    <span class="badge bg-danger fs-6">@item.DaysOverdue days</span>
+                                </td>
+                                <td>
+                                    <form asp-action="MarkReturned" method="post" style="display:inline;">
+                                        <input type="hidden" name="checkoutId" value="@item.CheckoutId" />
+                                        <button type="submit" class="btn btn-sm btn-success">
+                                            <i class="bi bi-check-circle"></i> Mark Returned
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" />
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('#overdueTable').DataTable({
+                pageLength: 10,
+                ordering: true,
+                responsive: true,
+                order: [[6, 'desc']]
+            });
+        });
+    </script>
 }

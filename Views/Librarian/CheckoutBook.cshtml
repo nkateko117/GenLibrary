@@ -1,5 +1,128 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model GenLibrary.ViewModels.CheckoutBookVM
+
 @{
+    ViewData["Title"] = "Checkout Book";
 }
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-box-arrow-right"></i> Checkout Book to Member</h2>
+        <a href="@Url.Action("Dashboard", "Librarian")" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+
+    @if (TempData["Message"] != null)
+    {
+        var isSuccess = TempData["Success"] as bool? ?? false;
+        <div class="alert @(isSuccess ? "alert-success" : "alert-danger") alert-dismissible fade show" role="alert">
+            @TempData["Message"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <strong>Checkout Form</strong>
+                </div>
+                <div class="card-body">
+                    <form asp-action="CheckoutBook" method="post">
+                        <!-- Book Selection (if not pre-selected) -->
+                        @if (Model.BookId == 0)
+                        {
+                            <div class="mb-3">
+                                <label class="form-label">Select a Book</label>
+                                <p class="text-muted">
+                                    Please go to <a href="@Url.Action("ManageBooks", "Librarian")">Manage Books</a> and click "Checkout" on an available book.
+                                </p>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="mb-3">
+                                <label class="form-label">Book</label>
+                                <input type="text" class="form-control" value="@Model.BookTitle" readonly />
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Select Copy</label>
+                                @if (Model.AvailableCopies.Any())
+                                {
+                                    <select name="copyId" class="form-select" required>
+                                        <option value="">-- Select a copy --</option>
+                                        @foreach (var copy in Model.AvailableCopies)
+                                        {
+                                            <option value="@copy.CopyId">@copy.Barcode (@copy.Condition)</option>
+                                        }
+                                    </select>
+                                }
+                                else
+                                {
+                                    <div class="alert alert-warning">No copies available for checkout.</div>
+                                }
+                            </div>
+                        }
+
+                        <div class="mb-3">
+                            <label class="form-label">Select Member</label>
+                            <select name="memberId" class="form-select" required>
+                                <option value="">-- Select a member --</option>
+                                @foreach (var member in Model.Members)
+                                {
+                                    var isDisabled = member.CurrentCheckouts >= 5;
+                                    var limitText = isDisabled ? " [LIMIT REACHED]" : "";
+                                    if (isDisabled)
+                                    {
+                                        <option value="@member.UserId" disabled>
+                                            @member.FullName (@member.Email) - @member.CurrentCheckouts/5 books@limitText
+                                        </option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@member.UserId">
+                                            @member.FullName (@member.Email) - @member.CurrentCheckouts/5 books
+                                        </option>
+                                    }
+                                }
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Checkout Duration</label>
+                            <input type="text" class="form-control" value="21 days" readonly />
+                            <small class="text-muted">Books must be returned within 21 days.</small>
+                        </div>
+
+                        @if (Model.BookId > 0 && Model.AvailableCopies.Any())
+                        {
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-check-circle"></i> Complete Checkout
+                            </button>
+                        }
+                        <a href="@Url.Action("ManageBooks", "Librarian")" class="btn btn-secondary">
+                            Cancel
+                        </a>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <strong>Checkout Rules</strong>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li><i class="bi bi-check-circle text-success"></i> Members can have up to 5 books</li>
+                        <li><i class="bi bi-check-circle text-success"></i> Loan period is 21 days</li>
+                        <li><i class="bi bi-exclamation-triangle text-warning"></i> Overdue books should be returned ASAP</li>
+                        <li><i class="bi bi-info-circle text-info"></i> Members at limit cannot checkout more books</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

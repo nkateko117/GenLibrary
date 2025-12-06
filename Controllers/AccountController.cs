@@ -2,7 +2,6 @@
 using GenLibrary.Models.ViewModels;
 using GenLibrary.Services;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GenLibrary.Controllers
@@ -30,7 +29,21 @@ namespace GenLibrary.Controllers
                 return View(model);
             }
 
-            return RedirectToAction("Index", "Home");
+            // Redirect based on role
+            return RedirectToAction("RedirectByRole");
+        }
+
+        [Authorize]
+        public async Task<IActionResult> RedirectByRole()
+        {
+            if (User.IsInRole("Librarian"))
+                return RedirectToAction("Dashboard", "Librarian");
+            
+            if (User.IsInRole("Member"))
+                return RedirectToAction("MyBooks", "Member");
+            
+            // Default fallback
+            return RedirectToAction("Index", "Books");
         }
 
         [HttpPost] public async Task<IActionResult> Logout() { await _authService.LogoutAsync(); return Redirect("/"); }

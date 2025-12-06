@@ -1,5 +1,98 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model List<GenLibrary.Dtos.LibrarianCheckoutDto>
+
 @{
+    ViewData["Title"] = "Process Returns";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-box-arrow-in-left"></i> Process Returns</h2>
+        <a href="@Url.Action("Dashboard", "Librarian")" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+
+    @if (TempData["Message"] != null)
+    {
+        var isSuccess = TempData["Success"] as bool? ?? false;
+        <div class="alert @(isSuccess ? "alert-success" : "alert-danger") alert-dismissible fade show" role="alert">
+            @TempData["Message"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="card">
+        <div class="card-header">
+            <strong>Books Currently Checked Out</strong>
+            <span class="badge bg-primary ms-2">@Model.Count items</span>
+        </div>
+        <div class="card-body">
+            <table id="returnsTable" class="table table-striped table-bordered" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>Book Title</th>
+                        <th>Barcode</th>
+                        <th>Member</th>
+                        <th>Checkout Date</th>
+                        <th>Due Date</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var checkout in Model)
+                    {
+                        <tr class="@(checkout.IsOverdue ? "table-danger" : "")">
+                            <td>@checkout.BookTitle</td>
+                            <td><code>@checkout.Barcode</code></td>
+                            <td>
+                                <strong>@checkout.MemberName</strong>
+                                <br /><small class="text-muted">@checkout.MemberEmail</small>
+                            </td>
+                            <td>@checkout.CheckoutDate.ToString("MMM dd, yyyy")</td>
+                            <td>@checkout.DueDate.ToString("MMM dd, yyyy")</td>
+                            <td>
+                                @if (checkout.IsOverdue)
+                                {
+                                    <span class="badge bg-danger">
+                                        <i class="bi bi-exclamation-triangle"></i> Overdue
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-success">
+                                        <i class="bi bi-clock"></i> @checkout.DaysLeft days left
+                                    </span>
+                                }
+                            </td>
+                            <td>
+                                <form asp-action="MarkReturned" method="post" style="display:inline;">
+                                    <input type="hidden" name="checkoutId" value="@checkout.CheckoutId" />
+                                    <button type="submit" class="btn btn-sm btn-success">
+                                        <i class="bi bi-check-circle"></i> Mark Returned
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" />
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('#returnsTable').DataTable({
+                pageLength: 10,
+                ordering: true,
+                responsive: true,
+                order: [[4, 'asc']]
+            });
+        });
+    </script>
 }

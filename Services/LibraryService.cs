@@ -1,111 +1,227 @@
-﻿//using GenLibrary.Data;
+﻿using GenLibrary.Data;
+using GenLibrary.Dtos;
+using Microsoft.Data.SqlClient;
+using System.Data;
 
-//namespace GenLibrary.Services
-//{
-//    public class LibraryService : ILibraryService
-//    {
-//        private readonly IDal _dal;
+namespace GenLibrary.Services
+{
+    public class LibraryService : ILibraryService
+    {
+        private readonly IDal _dal;
+        private readonly string _conn;
 
-//        public LibraryService(IDal dal)
-//        {
-//            _dal = dal;
-//        }
+        public LibraryService(IDal dal, IConfiguration config)
+        {
+            _dal = dal;
+            _conn = config.GetConnectionString("DefaultConnection");
+        }
 
-//        public async Task<IEnumerable<Book>> GetBooksAsync(int? authorId = null)
-//        {
-//            var parameters = authorId.HasValue
-//                ? new SqlParameter[] { new SqlParameter("@AuthorId", authorId.Value) }
-//                : Array.Empty<SqlParameter>();
+        public async Task<DashboardStatsDto> GetDashboardStatsAsync()
+        {
+            using var reader = (SqlDataReader)await _dal.ExecuteReaderAsync(_conn, "PROC_GetLibrarianDashboardStats");
+            if (await reader.ReadAsync())
+            {
+                return new DashboardStatsDto
+                {
+                    TotalBooks = reader.GetInt32(reader.GetOrdinal("TotalBooks")),
+                    TotalCopies = reader.GetInt32(reader.GetOrdinal("TotalCopies")),
+                    AvailableCopies = reader.GetInt32(reader.GetOrdinal("AvailableCopies")),
+                    ActiveCheckouts = reader.GetInt32(reader.GetOrdinal("ActiveCheckouts")),
+                    OverdueCount = reader.GetInt32(reader.GetOrdinal("OverdueCount")),
+                    TotalMembers = reader.GetInt32(reader.GetOrdinal("TotalMembers"))
+                };
+            }
+            return new DashboardStatsDto();
+        }
 
-//            using var reader = await _dal.ExecuteReaderAsync("PROC_GET_BOOKS", parameters);
-//            var books = new List<Book>();
+        public async Task<List<MemberDto>> GetAllMembersAsync()
+        {
+            var results = new List<MemberDto>();
+            using var reader = (SqlDataReader)await _dal.ExecuteReaderAsync(_conn, "PROC_GetAllMembers");
+            while (await reader.ReadAsync())
+            {
+                results.Add(new MemberDto
+                {
+                    UserId = reader.GetGuid(reader.GetOrdinal("UserId")),
+                    UserName = reader["UserName"]?.ToString() ?? string.Empty,
+                    Email = reader["Email"]?.ToString() ?? string.Empty,
+                    FullName = reader["FullName"]?.ToString() ?? string.Empty,
+                    CurrentCheckouts = reader.GetInt32(reader.GetOrdinal("CurrentCheckouts"))
+                });
+            }
+            return results;
+        }
 
-//            while (await reader.ReadAsync())
-//            {
-//                books.Add(new Book
-//                {
-//                    BookId = (int)reader["BookId"],
-//                    Title = reader["Title"].ToString(),
-//                    AuthorId = (int)reader["AuthorId"],
-//                    AuthorName = reader["AuthorName"].ToString(),
-//                    IsAvailable = (bool)reader["IsAvailable"],
-//                    DueDate = reader["DueDate"] != DBNull.Value ? (DateTime?)reader["DueDate"] : null
-//                });
-//            }
+        public async Task<int> GetCurrentCheckoutCountAsync(Guid userId)
+        {
+            using var reader = (SqlDataReader)await _dal.ExecuteReaderAsync(_conn, "PROC_GetCurrentCheckoutCount",
+                new SqlParameter("@UserId", userId));
+            if (await reader.ReadAsync())
+            {
+                return reader.GetInt32(reader.GetOrdinal("CurrentCount"));
+            }
+            return 0;
+        }
 
-//            return books;
-//        }
+        public async Task<List<MemberCheckoutDto>> GetCurrentCheckoutsByMemberAsync(Guid userId)
+        {
+            var results = new List<MemberCheckoutDto>();
+            using var reader = (SqlDataReader)await _dal.ExecuteReaderAsync(_conn, "PROC_GetCurrentCheckoutsByMember",
+                new SqlParameter("@UserId", userId));
+            while (await reader.ReadAsync())
+            {
+                results.Add(new MemberCheckoutDto
+                {
+                    CheckoutId = reader.GetInt32(reader.GetOrdinal("CheckoutId")),
+                    CopyId = reader.GetInt32(reader.GetOrdinal("CopyId")),
+                    BookId = reader.GetInt32(reader.GetOrdinal("BookId")),
+                    BookTitle = reader["BookTitle"]?.ToString() ?? string.Empty,
+                    Barcode = reader["Barcode"]?.ToString() ?? string.Empty,
+                    UserId = reader.GetGuid(reader.GetOrdinal("UserId")),
+                    CheckoutDate = reader.GetDateTime(reader.GetOrdinal("CheckoutDate")),
+                    DueDate = reader.GetDateTime(reader.GetOrdinal("DueDate")),
+                    ReturnDate = reader["ReturnDate"] != DBNull.Value ? reader.GetDateTime(reader.GetOrdinal("ReturnDate")) : null,
+                    IsOverdue = reader.GetInt32(reader.GetOrdinal("IsOverdue")) == 1,
+                    DaysLeft = reader["DaysLeft"] != DBNull.Value ? reader.GetInt32(reader.GetOrdinal("DaysLeft")) : null
+                });
+            }
+            return results;
+        }
 
-//        public async Task<bool> CheckoutBookAsync(int memberId, int bookId)
-//        {
-//            // 1. Check current checkout count
-//            using var reader = await _dal.ExecuteReaderAsync(
-//                "PROC_GET_CURRENT_CHECKOUT_COUNT",
-//                new SqlParameter("@MemberId", memberId)
-//            );
-//            int currentCount = 0;
-//            if (await reader.ReadAsync())
-//                currentCount = (int)reader[0];
+        public async Task<List<CheckoutHistoryDto>> GetCheckoutHistoryByMemberAsync(Guid userId)
+        {
+            var results = new List<CheckoutHistoryDto>();
+            using var reader = (SqlDataReader)await _dal.ExecuteReaderAsync(_conn, "PROC_GetCheckoutHistoryByMember",
+                new SqlParameter("@UserId", userId));
+            while (await reader.ReadAsync())
+            {
+                results.Add(new CheckoutHistoryDto
+                {
+                    CheckoutId = reader.GetInt32(reader.GetOrdinal("CheckoutId")),
+                    CopyId = reader.GetInt32(reader.GetOrdinal("CopyId")),
+                    BookId = reader.GetInt32(reader.GetOrdinal("BookId")),
+                    BookTitle = reader["BookTitle"]?.ToString() ?? string.Empty,
+                    Barcode = reader["Barcode"]?.ToString() ?? string.Empty,
+                    UserId = reader.GetGuid(reader.GetOrdinal("UserId")),
+                    CheckoutDate = reader.GetDateTime(reader.GetOrdinal("CheckoutDate")),
+                    DueDate = reader.GetDateTime(reader.GetOrdinal("DueDate")),
+                    ReturnDate = reader["ReturnDate"] != DBNull.Value ? reader.GetDateTime(reader.GetOrdinal("ReturnDate")) : null,
+                    WasOverdue = reader.GetInt32(reader.GetOrdinal("WasOverdue")) == 1
+                });
+            }
+            return results;
+        }
 
-//            if (currentCount >= 5)
-//                return false; // cannot checkout more than 5
+        public async Task<List<LibrarianCheckoutDto>> GetAllCurrentCheckoutsAsync()
+        {
+            var results = new List<LibrarianCheckoutDto>();
+            using var reader = (SqlDataReader)await _dal.ExecuteReaderAsync(_conn, "PROC_GetAllCurrentCheckouts");
+            while (await reader.ReadAsync())
+            {
+                results.Add(new LibrarianCheckoutDto
+                {
+                    CheckoutId = reader.GetInt32(reader.GetOrdinal("CheckoutId")),
+                    CopyId = reader.GetInt32(reader.GetOrdinal("CopyId")),
+                    BookId = reader.GetInt32(reader.GetOrdinal("BookId")),
+                    BookTitle = reader["BookTitle"]?.ToString() ?? string.Empty,
+                    Barcode = reader["Barcode"]?.ToString() ?? string.Empty,
+                    UserId = reader.GetGuid(reader.GetOrdinal("UserId")),
+                    MemberName = reader["MemberName"]?.ToString() ?? string.Empty,
+                    MemberEmail = reader["MemberEmail"]?.ToString() ?? string.Empty,
+                    CheckoutDate = reader.GetDateTime(reader.GetOrdinal("CheckoutDate")),
+                    DueDate = reader.GetDateTime(reader.GetOrdinal("DueDate")),
+                    ReturnDate = reader["ReturnDate"] != DBNull.Value ? reader.GetDateTime(reader.GetOrdinal("ReturnDate")) : null,
+                    IsOverdue = reader.GetInt32(reader.GetOrdinal("IsOverdue")) == 1,
+                    DaysLeft = reader["DaysLeft"] != DBNull.Value ? reader.GetInt32(reader.GetOrdinal("DaysLeft")) : null
+                });
+            }
+            return results;
+        }
 
-//            // 2. Call stored procedure to checkout
-//            await _dal.ExecuteReaderAsync(
-//                "PROC_CHECKOUT_BOOK",
-//                new SqlParameter("@MemberId", memberId),
-//                new SqlParameter("@BookId", bookId)
-//            );
+        public async Task<List<OverdueCheckoutDto>> GetOverdueCheckoutsAsync()
+        {
+            var results = new List<OverdueCheckoutDto>();
+            using var reader = (SqlDataReader)await _dal.ExecuteReaderAsync(_conn, "PROC_GetOverdueCheckouts");
+            while (await reader.ReadAsync())
+            {
+                results.Add(new OverdueCheckoutDto
+                {
+                    CheckoutId = reader.GetInt32(reader.GetOrdinal("CheckoutId")),
+                    CopyId = reader.GetInt32(reader.GetOrdinal("CopyId")),
+                    BookId = reader.GetInt32(reader.GetOrdinal("BookId")),
+                    BookTitle = reader["BookTitle"]?.ToString() ?? string.Empty,
+                    Barcode = reader["Barcode"]?.ToString() ?? string.Empty,
+                    UserId = reader.GetGuid(reader.GetOrdinal("UserId")),
+                    MemberName = reader["MemberName"]?.ToString() ?? string.Empty,
+                    MemberEmail = reader["MemberEmail"]?.ToString() ?? string.Empty,
+                    CheckoutDate = reader.GetDateTime(reader.GetOrdinal("CheckoutDate")),
+                    DueDate = reader.GetDateTime(reader.GetOrdinal("DueDate")),
+                    DaysOverdue = reader.GetInt32(reader.GetOrdinal("DaysOverdue"))
+                });
+            }
+            return results;
+        }
 
-//            return true;
-//        }
+        public async Task<List<AvailableCopyDto>> GetAvailableCopiesAsync(int bookId)
+        {
+            var results = new List<AvailableCopyDto>();
+            using var reader = (SqlDataReader)await _dal.ExecuteReaderAsync(_conn, "PROC_GetAvailableCopies",
+                new SqlParameter("@BookId", bookId));
+            while (await reader.ReadAsync())
+            {
+                results.Add(new AvailableCopyDto
+                {
+                    CopyId = reader.GetInt32(reader.GetOrdinal("CopyId")),
+                    BookId = reader.GetInt32(reader.GetOrdinal("BookId")),
+                    Barcode = reader["Barcode"]?.ToString() ?? string.Empty,
+                    Condition = reader["Condition"]?.ToString() ?? string.Empty,
+                    Title = reader["Title"]?.ToString() ?? string.Empty
+                });
+            }
+            return results;
+        }
 
-//        public async Task<bool> ReturnBookAsync(int checkoutId)
-//        {
-//            await _dal.ExecuteReaderAsync(
-//                "PROC_RETURN_BOOK",
-//                new SqlParameter("@CheckoutId", checkoutId)
-//            );
-//            return true;
-//        }
+        public async Task<(bool Success, string Message)> CheckoutBookAsync(int copyId, Guid userId)
+        {
+            var successParam = new SqlParameter("@Success", SqlDbType.Bit) { Direction = ParameterDirection.Output };
+            var messageParam = new SqlParameter("@Message", SqlDbType.NVarChar, 255) { Direction = ParameterDirection.Output };
 
-//        public async Task<IEnumerable<Checkout>> GetCheckoutsByMemberAsync(int memberId)
-//        {
-//            using var reader = await _dal.ExecuteReaderAsync(
-//                "PROC_GET_CHECKOUTS_BY_MEMBER",
-//                new SqlParameter("@MemberId", memberId)
-//            );
+            await _dal.ExecuteNonQueryAsync(_conn, "PROC_CheckoutBook",
+                new SqlParameter("@CopyId", copyId),
+                new SqlParameter("@UserId", userId),
+                successParam,
+                messageParam);
 
-//            var list = new List<Checkout>();
-//            while (await reader.ReadAsync())
-//            {
-//                list.Add(new Checkout
-//                {
-//                    CheckoutId = (int)reader["CheckoutId"],
-//                    BookId = (int)reader["BookId"],
-//                    MemberId = (int)reader["MemberId"],
-//                    CheckoutDate = (DateTime)reader["CheckoutDate"],
-//                    DueDate = (DateTime)reader["DueDate"],
-//                    ReturnDate = reader["ReturnDate"] != DBNull.Value ? (DateTime?)reader["ReturnDate"] : null
-//                });
-//            }
-//            return list;
-//        }
+            return ((bool)successParam.Value, messageParam.Value?.ToString() ?? string.Empty);
+        }
 
-//        public async Task<IEnumerable<Member>> GetMembersAsync()
-//        {
-//            using var reader = await _dal.ExecuteReaderAsync("PROC_GET_MEMBERS");
-//            var members = new List<Member>();
-//            while (await reader.ReadAsync())
-//            {
-//                members.Add(new Member
-//                {
-//                    MemberId = (int)reader["MemberId"],
-//                    FullName = reader["FullName"].ToString(),
-//                    Email = reader["Email"].ToString()
-//                });
-//            }
-//            return members;
-//        }
-//    }
-//}
+        public async Task<(bool Success, string Message)> ReturnBookAsync(int checkoutId)
+        {
+            var successParam = new SqlParameter("@Success", SqlDbType.Bit) { Direction = ParameterDirection.Output };
+            var messageParam = new SqlParameter("@Message", SqlDbType.NVarChar, 255) { Direction = ParameterDirection.Output };
+
+            await _dal.ExecuteNonQueryAsync(_conn, "PROC_ReturnBook",
+                new SqlParameter("@CheckoutId", checkoutId),
+                successParam,
+                messageParam);
+
+            return ((bool)successParam.Value, messageParam.Value?.ToString() ?? string.Empty);
+        }
+
+        public async Task<List<AuthorDto>> GetAllAuthorsAsync()
+        {
+            var results = new List<AuthorDto>();
+            using var reader = (SqlDataReader)await _dal.ExecuteReaderAsync(_conn, "PROC_GetAllAuthors");
+            while (await reader.ReadAsync())
+            {
+                results.Add(new AuthorDto
+                {
+                    AuthorId = reader.GetInt32(reader.GetOrdinal("AuthorId")),
+                    FirstName = reader["FirstName"]?.ToString() ?? string.Empty,
+                    LastName = reader["LastName"]?.ToString() ?? string.Empty
+                });
+            }
+            return results;
+        }
+    }
+}

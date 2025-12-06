@@ -6,7 +6,7 @@
 
 <div class="container mt-4">
 
-    <h2 class="mb-4">Books</h2>
+    <h2 class="mb-4"><i class="bi bi-book"></i> Books</h2>
 
     <div id="bookFilterContainer">
         @await Html.PartialAsync("_BookFilter", Model)
@@ -18,4 +18,9 @@
 
 </div>
 
-<script src="~/js/books.js"></script>
+@section Scripts {
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" />
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script src="~/js/books.js"></script>
+}
