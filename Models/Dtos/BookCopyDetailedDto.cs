@@ -1,4 +1,4 @@
-﻿namespace GenLibrary.Models.Dtos
+﻿namespace GenLibrary.Dtos
 {
     public class BookCopyDetailedDto
     {

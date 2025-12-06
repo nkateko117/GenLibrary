@@ -98,5 +98,37 @@ using (var scope = app.Services.CreateScope())
             await userManager.AddToRoleAsync(adminUser, "Librarian");
         }
     }
+
+    // Seeding 3 random Members
+    var members = new[]
+    {
+        new { UserName = "john.doe", Email = "john.doe@library.local", FullName = "John Doe" },
+        new { UserName = "jane.smith", Email = "jane.smith@library.local", FullName = "Jane Smith" },
+        new { UserName = "mike.wilson", Email = "mike.wilson@library.local", FullName = "Mike Wilson" }
+    };
+
+    foreach (var member in members)
+    {
+        var existingMember = await userManager.FindByEmailAsync(member.Email);
+
+        if (existingMember == null)
+        {
+            var newMember = new AppUser
+            {
+                UserName = member.UserName,
+                NormalizedUserName = member.UserName.ToUpperInvariant(),
+                Email = member.Email,
+                NormalizedEmail = member.Email.ToUpperInvariant(),
+                FullName = member.FullName
+            };
+
+            var createResult = await userManager.CreateAsync(newMember, "P@ssw0rd!");
+
+            if (createResult.Succeeded)
+            {
+                await userManager.AddToRoleAsync(newMember, "Member");
+            }
+        }
+    }
 }
 app.Run();

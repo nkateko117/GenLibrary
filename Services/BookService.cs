@@ -1,7 +1,5 @@
 ﻿using GenLibrary.Data;
 using GenLibrary.Dtos;
-using GenLibrary.Identity.Models;
-using GenLibrary.Models.Dtos;
 using Microsoft.Data.SqlClient;
 
 namespace GenLibrary.Services

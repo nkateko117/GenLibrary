@@ -28,7 +28,6 @@ namespace GenLibrary.Identity.Stores
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            var pId = new SqlParameter("@Id", SqlDbType.UniqueIdentifier) { Direction = ParameterDirection.Output };
             var pUserName = new SqlParameter("@UserName", user.UserName ?? (object)DBNull.Value);
             var pNormUser = new SqlParameter("@NormalizedUserName", user.NormalizedUserName ?? (object)DBNull.Value);
             var pEmail = new SqlParameter("@Email", user.Email ?? (object)DBNull.Value);
@@ -38,8 +37,12 @@ namespace GenLibrary.Identity.Stores
 
             try
             {
-                await _dal.ExecuteNonQueryAsync(_conn, "PROC_ID_CreateUser", pId, pUserName, pNormUser, pEmail, pNormEmail, pPasswordHash, pFullName);
-                user.Id = (Guid)pId.Value;
+                // The stored procedure returns the new Id via SELECT, not an output parameter
+                using var reader = (SqlDataReader)await _dal.ExecuteReaderAsync(_conn, "PROC_ID_CreateUser", pUserName, pNormUser, pEmail, pNormEmail, pPasswordHash, pFullName);
+                if (await reader.ReadAsync(cancellationToken))
+                {
+                    user.Id = reader.GetGuid(0);
+                }
                 return IdentityResult.Success;
             }
             catch (SqlException ex)
@@ -224,7 +227,19 @@ namespace GenLibrary.Identity.Stores
             using var reader = (SqlDataReader)await _dal.ExecuteReaderAsync(_conn, "PROC_ID_GetUserByNormalizedEmail", new SqlParameter("@NormalizedEmail", normalizedEmail));
             if (await reader.ReadAsync(cancellationToken))
             {
-                return MapUser(reader);
+                // PROC_ID_GetUserByNormalizedEmail returns fewer columns than MapUser expects,
+                // so we map only the available columns here
+                return new AppUser
+                {
+                    Id = reader.GetGuid(reader.GetOrdinal("Id")),
+                    UserName = reader["UserName"]?.ToString(),
+                    NormalizedUserName = reader["NormalizedUserName"]?.ToString(),
+                    Email = reader["Email"]?.ToString(),
+                    NormalizedEmail = reader["NormalizedEmail"]?.ToString(),
+                    EmailConfirmed = reader["EmailConfirmed"] != DBNull.Value && (bool)reader["EmailConfirmed"],
+                    PasswordHash = reader["PasswordHash"]?.ToString(),
+                    FullName = reader["FullName"]?.ToString()
+                };
             }
             return null;
         }
