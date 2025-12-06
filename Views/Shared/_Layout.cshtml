@@ -19,9 +19,24 @@
     <header>
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
             <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">
-                    <i class="bi bi-book-half"></i> GenLibrary
-                </a>
+                @if (User.IsInRole("Librarian"))
+                {
+                    <a class="navbar-brand" asp-controller="Librarian" asp-action="Dashboard">
+                        <i class="bi bi-book-half"></i> GenLibrary
+                    </a>
+                }
+                else if (User.IsInRole("Member"))
+                {
+                    <a class="navbar-brand" asp-controller="Member" asp-action="MyBooks">
+                        <i class="bi bi-book-half"></i> GenLibrary
+                    </a>
+                }
+                else
+                {
+                    <a class="navbar-brand" asp-controller="Books" asp-action="Index">
+                        <i class="bi bi-book-half"></i> GenLibrary
+                    </a>
+                }
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
                         aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
@@ -120,7 +135,7 @@
 
     <footer class="border-top footer text-muted">
         <div class="container">
-            &copy; 2025 - GenLibrary - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            &copy; 2025 - GenLibrary
         </div>
     </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
