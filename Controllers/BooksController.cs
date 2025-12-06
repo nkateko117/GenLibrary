@@ -1,9 +1,11 @@
 ﻿using GenLibrary.Services;
 using GenLibrary.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GenLibrary.Controllers
 {
+    [Authorize]
     public class BooksController : Controller
     {
         private readonly IBookService _bookServices;

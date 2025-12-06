@@ -1,0 +1,44 @@
+﻿Scenario: You’re building a library system with two types of users: Librarians and
+Members. Librarians manage books, checkouts, and returns, while members can view
+books and check them out but are limited to 5 at a time. Both members and librarians
+can see if a book is overdue, and books should be returned within 21 days of checkout.
+Books are linked to authors and should be filterable by author.
+Requirements
+
+1. Data Layer
+ Models:
+o Based on the scenario and the below itemed requirements please build
+models that will encapsulate all properties that will be needed to achieve
+the scenario.
+ Relationships:
+o This is for you to determine and create a logical schema that will allow for
+all the relationships to make sense and also allow for additional items to
+be added in future.
+
+2. Core Services
+ Library Service: Manages checkouts, returns, and tracks borrowed books.
+o Ensure members can only have 5 books checked out at once.
+o Track if books are overdue.
+o Librarians can mark books as returned.
+o Allow filtering of books by author.
+ Validation: Ensure members don’t exceed the checkout limit, books are
+available, and the return date is enforced.
+
+3. User Roles
+ Librarians: Can view all books and checkouts, mark books as returned, view
+overdue books, and filter books by author.
+ Members: Can view their own current and past checkouts, see overdue status,
+and check out books (with a 5-book limit).
+
+4. Data Tables
+ Data Tables: Display lists of books, members, and checkouts using a table
+library (e.g., DataTables.js).o Include features like search, sorting, pagination, overdue indicators, and
+filtering books by author.
+5. Controllers and Views
+
+ Build views:
+o Librarians: Manage books, checkouts, returns, filter books by author, and
+view overdue books.
+o Members: View their current and past checkouts in to separate tabs, see
+overdue status, and check out books (with a 5-book limit).
+o Any Additional items you see required.

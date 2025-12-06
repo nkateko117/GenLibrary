@@ -2,11 +2,20 @@ using GenLibrary.Data;
 using GenLibrary.Identity.Models;
 using GenLibrary.Identity.Stores;
 using GenLibrary.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc.Authorization;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllersWithViews();
+// Add global authorization filter - requires authentication by default
+builder.Services.AddControllersWithViews(options =>
+{
+    var policy = new AuthorizationPolicyBuilder()
+        .RequireAuthenticatedUser()
+        .Build();
+    options.Filters.Add(new AuthorizeFilter(policy));
+});
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
