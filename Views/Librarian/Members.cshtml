@@ -1,0 +1,77 @@
+@model List<GenLibrary.Dtos.MemberDto>
+
+@{
+    ViewData["Title"] = "Members";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-people"></i> Library Members</h2>
+        <a href="@Url.Action("Dashboard", "Librarian")" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <strong>All Members</strong>
+            <span class="badge bg-primary ms-2">@Model.Count total</span>
+        </div>
+        <div class="card-body">
+            <table id="membersTable" class="table table-striped table-bordered" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>Full Name</th>
+                        <th>Email</th>
+                        <th>Username</th>
+                        <th>Current Checkouts</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var member in Model)
+                    {
+                        <tr>
+                            <td><strong>@member.FullName</strong></td>
+                            <td><a href="mailto:@member.Email">@member.Email</a></td>
+                            <td>@member.UserName</td>
+                            <td>
+                                <div class="progress" style="height: 20px;">
+                                    <div class="progress-bar @(member.CurrentCheckouts >= 5 ? "bg-danger" : member.CurrentCheckouts >= 3 ? "bg-warning" : "bg-success")"
+                                         style="width: @(member.CurrentCheckouts * 20)%;">
+                                        @member.CurrentCheckouts / 5
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                @if (member.CurrentCheckouts >= 5)
+                                {
+                                    <span class="badge bg-danger">At Limit</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-success">Can Checkout (@member.RemainingCheckouts left)</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" />
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('#membersTable').DataTable({
+                pageLength: 10,
+                ordering: true,
+                responsive: true
+            });
+        });
+    </script>
+}

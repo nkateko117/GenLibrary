@@ -1,5 +1,199 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model GenLibrary.ViewModels.MemberMyBooksVM
+
 @{
+    ViewData["Title"] = "My Books";
+}
+
+<div class="container mt-4">
+    <h2 class="mb-4"><i class="bi bi-book"></i> My Books</h2>
+
+    @if (TempData["Message"] != null)
+    {
+        var isSuccess = TempData["Success"] as bool? ?? false;
+        <div class="alert @(isSuccess ? "alert-success" : "alert-danger") alert-dismissible fade show" role="alert">
+            @TempData["Message"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Checkout Status Card -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row text-center">
+                <div class="col-md-4">
+                    <h4 class="text-primary">@Model.CurrentCount</h4>
+                    <p class="text-muted">Currently Borrowed</p>
+                </div>
+                <div class="col-md-4">
+                    <h4 class="@(Model.RemainingCheckouts > 0 ? "text-success" : "text-danger")">@Model.RemainingCheckouts</h4>
+                    <p class="text-muted">Available to Borrow</p>
+                </div>
+                <div class="col-md-4">
+                    <h4>5</h4>
+                    <p class="text-muted">Maximum Allowed</p>
+                </div>
+            </div>
+            @if (Model.RemainingCheckouts > 0)
+            {
+                <div class="text-center mt-3">
+                    <a href="@Url.Action("Index", "Books")" class="btn btn-success">
+                        <i class="bi bi-plus-circle"></i> Browse & Checkout More Books
+                    </a>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-warning text-center mt-3 mb-0">
+                    <i class="bi bi-exclamation-triangle"></i> You have reached your checkout limit. Please return a book before borrowing another.
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <ul class="nav nav-tabs" id="myBooksTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="current-tab" data-bs-toggle="tab" data-bs-target="#current" type="button" role="tab">
+                <i class="bi bi-book-fill"></i> Current Checkouts
+                <span class="badge bg-primary">@Model.CurrentCheckouts.Count</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="history-tab" data-bs-toggle="tab" data-bs-target="#history" type="button" role="tab">
+                <i class="bi bi-clock-history"></i> History
+                <span class="badge bg-secondary">@Model.History.Count</span>
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="myBooksTabContent">
+        <!-- Current Checkouts Tab -->
+        <div class="tab-pane fade show active" id="current" role="tabpanel">
+            <div class="card border-top-0 rounded-top-0">
+                <div class="card-body">
+                    @if (!Model.CurrentCheckouts.Any())
+                    {
+                        <div class="text-center py-4">
+                            <i class="bi bi-inbox fs-1 text-muted"></i>
+                            <p class="mt-2 text-muted">You don't have any books checked out.</p>
+                            <a href="@Url.Action("Index", "Books")" class="btn btn-primary">Browse Books</a>
+                        </div>
+                    }
+                    else
+                    {
+                        <table id="currentTable" class="table table-striped" style="width:100%">
+                            <thead>
+                                <tr>
+                                    <th>Book Title</th>
+                                    <th>Barcode</th>
+                                    <th>Checkout Date</th>
+                                    <th>Due Date</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var checkout in Model.CurrentCheckouts)
+                                {
+                                    <tr class="@(checkout.IsOverdue ? "table-danger" : "")">
+                                        <td><strong>@checkout.BookTitle</strong></td>
+                                        <td><code>@checkout.Barcode</code></td>
+                                        <td>@checkout.CheckoutDate.ToString("MMM dd, yyyy")</td>
+                                        <td>@checkout.DueDate.ToString("MMM dd, yyyy")</td>
+                                        <td>
+                                            @if (checkout.IsOverdue)
+                                            {
+                                                <span class="badge bg-danger">
+                                                    <i class="bi bi-exclamation-triangle"></i> Overdue!
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-success">
+                                                    <i class="bi bi-clock"></i> @checkout.DaysLeft days left
+                                                </span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- History Tab -->
+        <div class="tab-pane fade" id="history" role="tabpanel">
+            <div class="card border-top-0 rounded-top-0">
+                <div class="card-body">
+                    @if (!Model.History.Any())
+                    {
+                        <div class="text-center py-4">
+                            <i class="bi bi-inbox fs-1 text-muted"></i>
+                            <p class="mt-2 text-muted">No checkout history yet.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <table id="historyTable" class="table table-striped" style="width:100%">
+                            <thead>
+                                <tr>
+                                    <th>Book Title</th>
+                                    <th>Barcode</th>
+                                    <th>Checkout Date</th>
+                                    <th>Due Date</th>
+                                    <th>Returned Date</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model.History)
+                                {
+                                    <tr>
+                                        <td>@item.BookTitle</td>
+                                        <td><code>@item.Barcode</code></td>
+                                        <td>@item.CheckoutDate.ToString("MMM dd, yyyy")</td>
+                                        <td>@item.DueDate.ToString("MMM dd, yyyy")</td>
+                                        <td>@item.ReturnDate?.ToString("MMM dd, yyyy")</td>
+                                        <td>
+                                            @if (item.WasOverdue)
+                                            {
+                                                <span class="badge bg-warning text-dark">Was Overdue</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-success">On Time</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" />
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('#currentTable').DataTable({
+                pageLength: 10,
+                ordering: true,
+                responsive: true,
+                order: [[3, 'asc']]
+            });
+            $('#historyTable').DataTable({
+                pageLength: 10,
+                ordering: true,
+                responsive: true,
+                order: [[4, 'desc']]
+            });
+        });
+    </script>
 }

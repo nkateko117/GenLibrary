@@ -27,6 +27,7 @@ builder.Services.AddScoped<IRoleStore<IdentityRole<Guid>>, CustomRoleStore>();
 
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IBookService, BookService>();
+builder.Services.AddScoped<ILibraryService, LibraryService>();
 
 // ASP.NET Core Identity Config
 builder.Services.AddIdentity<AppUser, IdentityRole<Guid>>(options =>

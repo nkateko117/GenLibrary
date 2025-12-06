@@ -1,5 +1,138 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model GenLibrary.ViewModels.LibrarianDashboardVM
+
 @{
+    ViewData["Title"] = "Librarian Dashboard";
 }
+
+<div class="container mt-4">
+    <h2 class="mb-4">
+        <i class="bi bi-speedometer2"></i> Librarian Dashboard
+    </h2>
+
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-md-2">
+            <div class="card text-white bg-primary">
+                <div class="card-body text-center">
+                    <h3 class="card-title">@Model.Stats.TotalBooks</h3>
+                    <p class="card-text">Total Books</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-white bg-info">
+                <div class="card-body text-center">
+                    <h3 class="card-title">@Model.Stats.TotalCopies</h3>
+                    <p class="card-text">Total Copies</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-white bg-success">
+                <div class="card-body text-center">
+                    <h3 class="card-title">@Model.Stats.AvailableCopies</h3>
+                    <p class="card-text">Available</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-white bg-warning">
+                <div class="card-body text-center">
+                    <h3 class="card-title">@Model.Stats.ActiveCheckouts</h3>
+                    <p class="card-text">Checked Out</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-white bg-danger">
+                <div class="card-body text-center">
+                    <h3 class="card-title">@Model.Stats.OverdueCount</h3>
+                    <p class="card-text">Overdue</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-white bg-secondary">
+                <div class="card-body text-center">
+                    <h3 class="card-title">@Model.Stats.TotalMembers</h3>
+                    <p class="card-text">Members</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <strong>Quick Actions</strong>
+                </div>
+                <div class="card-body">
+                    <a href="@Url.Action("ManageBooks", "Librarian")" class="btn btn-primary me-2">
+                        <i class="bi bi-book"></i> Manage Books
+                    </a>
+                    <a href="@Url.Action("CheckoutBook", "Librarian")" class="btn btn-success me-2">
+                        <i class="bi bi-box-arrow-right"></i> Checkout Book
+                    </a>
+                    <a href="@Url.Action("Returns", "Librarian")" class="btn btn-warning me-2">
+                        <i class="bi bi-box-arrow-in-left"></i> Process Returns
+                    </a>
+                    <a href="@Url.Action("Overdue", "Librarian")" class="btn btn-danger me-2">
+                        <i class="bi bi-exclamation-triangle"></i> View Overdue (@Model.Stats.OverdueCount)
+                    </a>
+                    <a href="@Url.Action("Members", "Librarian")" class="btn btn-secondary">
+                        <i class="bi bi-people"></i> View Members
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Overdue -->
+    @if (Model.RecentOverdue.Any())
+    {
+        <div class="row">
+            <div class="col-12">
+                <div class="card border-danger">
+                    <div class="card-header bg-danger text-white">
+                        <strong><i class="bi bi-exclamation-circle"></i> Recent Overdue Books</strong>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Book</th>
+                                    <th>Barcode</th>
+                                    <th>Member</th>
+                                    <th>Due Date</th>
+                                    <th>Days Overdue</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model.RecentOverdue)
+                                {
+                                    <tr>
+                                        <td>@item.BookTitle</td>
+                                        <td>@item.Barcode</td>
+                                        <td>@item.MemberName</td>
+                                        <td>@item.DueDate.ToString("yyyy-MM-dd")</td>
+                                        <td><span class="badge bg-danger">@item.DaysOverdue days</span></td>
+                                        <td>
+                                            <form asp-action="MarkReturned" method="post" style="display:inline;">
+                                                <input type="hidden" name="checkoutId" value="@item.CheckoutId" />
+                                                <button type="submit" class="btn btn-sm btn-success">Mark Returned</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                        <a href="@Url.Action("Overdue", "Librarian")" class="btn btn-outline-danger">View All Overdue</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>

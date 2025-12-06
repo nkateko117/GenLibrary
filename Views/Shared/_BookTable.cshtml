@@ -29,7 +29,21 @@
                 </td>
                 <td>@book.PublishedYear</td>
                 <td>
-                    <a href="@Url.Action("Copies", "Books", new { bookId = book.BookId, title = book.Title })" class="btn btn-primary btn-sm">View Copies</a>
+                    <a href="@Url.Action("Copies", "Books", new { bookId = book.BookId, title = book.Title })" class="btn btn-primary btn-sm">
+                        <i class="bi bi-eye"></i> View Copies
+                    </a>
+                    @if (User.IsInRole("Member") && book.AvailableCopies > 0)
+                    {
+                        <a href="@Url.Action("Checkout", "Member", new { bookId = book.BookId })" class="btn btn-success btn-sm">
+                            <i class="bi bi-cart-plus"></i> Checkout
+                        </a>
+                    }
+                    @if (User.IsInRole("Librarian") && book.AvailableCopies > 0)
+                    {
+                        <a href="@Url.Action("CheckoutBook", "Librarian", new { bookId = book.BookId })" class="btn btn-success btn-sm">
+                            <i class="bi bi-box-arrow-right"></i> Checkout
+                        </a>
+                    }
                 </td>
             </tr>
         }
