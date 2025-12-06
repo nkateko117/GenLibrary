@@ -9,7 +9,6 @@
 
   <ItemGroup>
     <Folder Include="Models\Entities\" />
-    <Folder Include="DbScripts\" />
     <Folder Include="Repositories\" />
   </ItemGroup>
 
